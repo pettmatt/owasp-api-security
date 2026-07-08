@@ -16,9 +16,9 @@ export function createUser(email: string, passwordHash: string): User {
 	const info = stmt.run(email, passwordHash)
 	const user = findUserById(Number(info.lastInsertRowid))
 
-	if (!user) {
+	if (!user)
 		throw new Error("Failed to create user")
-	}
+
 	return user
 }
 

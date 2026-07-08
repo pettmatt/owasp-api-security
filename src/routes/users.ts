@@ -5,7 +5,7 @@ import { AppError } from "../middleware/errorHandler"
 
 const router = Router()
 
-router.get("/user", requireAuth, (req: Request, res: Response, next: NextFunction) => {
+router.get("/me", requireAuth, (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const user = findUserById(req.user!.sub)
 		if (!user)

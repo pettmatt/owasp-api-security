@@ -23,10 +23,7 @@ import { AppError } from "../middleware/errorHandler"
 
 const router = Router()
 
-router.post(
-	"/register",
-	authLimiter,
-	validateBody(registerSchema),
+router.post("/register", authLimiter, validateBody(registerSchema),
 	async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const { email, password } = req.body
@@ -67,9 +64,8 @@ router.post(
 			const user = findUserByEmail(email)
 			// Always run bcrypt.compare even if user is missing, using a dummy
 			// hash, to avoid leaking user existence via response timing.
-			const dummyHash =
-				"$2b$12$CwTycUXWue0Thq9StjUM0uJ8yiJ8yiJ8yiJ8yiJ8yiJ8yiJ8yiJ8y"
-				const passwordMatches = await verifyPassword(
+			const dummyHash = "$2b$12$CwTycUXWue0Thq9StjUM0uJ8yiJ8yiJ8yiJ8yiJ8yiJ8yiJ8yiJ8y"
+			const passwordMatches = await verifyPassword(
 				password,
 				user?.password_hash ?? dummyHash
 			)
@@ -96,10 +92,7 @@ router.post(
 	}
 )
 
-router.post(
-	"/refresh",
-	authLimiter,
-	validateBody(refreshSchema),
+router.post("/refresh", authLimiter, validateBody(refreshSchema),
 	(req: Request, res: Response, next: NextFunction) => {
 		try {
 			const { refreshToken } = req.body
@@ -130,9 +123,7 @@ router.post(
 	}
 )
 
-router.post(
-	"/logout",
-	validateBody(refreshSchema),
+router.post("/logout", validateBody(refreshSchema),
 	(req: Request, res: Response, next: NextFunction) => {
 		try {
 			const { refreshToken } = req.body

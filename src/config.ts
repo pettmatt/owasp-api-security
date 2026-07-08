@@ -5,15 +5,15 @@ dotenv.config()
 
 function required(name: string, fallback?: string): string {
 	const value = process.env[name] ?? fallback
-	if (value === undefined || value === "") {
+	if (value === undefined || value === "")
 		throw new Error(`Missing required environment variable: ${name}`)
-	}
 	return value
 }
 
 function optionalInt(name: string, fallback: number): number {
 	const raw = process.env[name]
-	if (!raw) return fallback
+	if (!raw)
+		return fallback
 	const parsed = parseInt(raw, 10)
 	return Number.isNaN(parsed) ? fallback : parsed
 }
@@ -21,7 +21,7 @@ function optionalInt(name: string, fallback: number): number {
 const nodeEnv = process.env.NODE_ENV ?? "development"
 const jwtSecret = required("JWT_SECRET")
 
-// Fail fast in production if a weak/default secret is used.
+// Fail fast in production if a weak secret is used.
 if (nodeEnv === "production") {
 	if (jwtSecret.includes("replace") || jwtSecret.length < 32) {
 		throw new Error(

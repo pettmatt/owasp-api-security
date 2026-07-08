@@ -10,7 +10,6 @@ const server = app.listen(config.port, () => {
 	console.log(`Server listening on port ${config.port} (${config.nodeEnv})`)
 })
 
-// Graceful shutdown on termination signals.
 function shutdown(signal: string): void {
 	// eslint-disable-next-line no-console
 	console.log(`Received ${signal}, shutting down gracefully...`)

@@ -4,9 +4,8 @@ import path from "path"
 import fs from "fs"
 
 const dir = path.dirname(config.dbPath)
-if (!fs.existsSync(dir)) {
+if (!fs.existsSync(dir))
 	fs.mkdirSync(dir, { recursive: true })
-}
 
 export const db = new DatabaseSync(config.dbPath)
 

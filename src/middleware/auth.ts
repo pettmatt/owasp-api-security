@@ -4,11 +4,7 @@ import jwt from "jsonwebtoken"
 
 // Verifies the Bearer access token and attaches the decoded payload to
 // req.user. Does not trust any client-supplied identity claims otherwise.
-export function requireAuth(
-	req: Request,
-	res: Response,
-	next: NextFunction
-): void {
+export function requireAuth(req: Request, res: Response, next: NextFunction): void {
 	const header = req.headers.authorization
 	if (!header || !header.startsWith("Bearer")) {
 		res.status(401).json({ error: "Missing or malformed Authorization header" })
