@@ -9,19 +9,32 @@ curl -s -o /dev/null \
 	-H "Content-Type: application/json" \
 	-d '{"email":"me@example.com","password":"securepass123"}'
 
-echo ""
-echo "  Broken Object Level Authorization:"
+echo "Loging in"
 
 RESPONSE=$(curl -s -X POST http://localhost:3000/api/auth/login \
 	-H "Content-Type: application/json" \
 	-d '{"email":"me@example.com","password":"securepass123"}')
-ID=$(echo "$RESPONSE" | jq ".user.id")
-TOKEN=$(echo "$RESPONSE" | jq ".accessToken")
-REFRESH=$(echo "$RESPONSE" | jq ".refreshToken")
+ID=$(echo "$RESPONSE" | jq -r ".user.id")
+TOKEN=$(echo "$RESPONSE" | jq -r ".accessToken")
+REFRESH=$(echo "$RESPONSE" | jq -r ".refreshToken")
 
-sleep 1
+TEST_STATUS=$(curl -s -o /dev/null \
+	-w "%{http_code}" \
+	-X GET http://localhost:3000/api/users/me \
+	-H "Authorization: Bearer $TOKEN")
 
-echo "    Creating another user"
+if [ "$TEST_STATUS" == "401" ]; then
+	echo "Refreshing login token."
+	REFRESH_RES=$(curl -s -X POST http://localhost:3000/api/auth/refresh \
+		-H "Content-Type: application/json" \
+		-d "{\"refreshToken\":\"$REFRESH\"}")
+	TOKEN=$(echo "$REFRESH_RES" | jq -r ".accessToken")
+	REFRESH=$(echo "$REFRESH_RES" | jq -r ".refreshToken")
+fi
+
+sleep 5
+
+echo "Creating another user"
 curl -s -X POST http://localhost:3000/api/auth/register \
 	-H "Content-Type: application/json" \
 	-d '{"email":"you@example.com","password":"securepass123"}'
@@ -29,13 +42,11 @@ curl -s -X POST http://localhost:3000/api/auth/register \
 OTHER_RESPONSE=$(curl -s -X POST http://localhost:3000/api/auth/login \
 	-H "Content-Type: application/json" \
 	-d '{"email":"you@example.com","password":"securepass123"}')
-O_ID=$(echo "$OTHER_RESPONSE" | jq ".user.id")
+O_ID=$(echo "$OTHER_RESPONSE" | jq -r ".user.id")
 
-sleep 3
-
+echo ""
+echo "  Broken Object Level Authorization:"
 echo "    Trying to access user data"
-
-sleep 5
 
 check_if_BOLA_failed() {
 	HTTP_CODE=$1
@@ -72,13 +83,47 @@ echo "Sleeping for 10 seconds"
 sleep 10
 
 echo ""
+echo "Broken authentication test"
+REQUEST_ARE_LIMITED=0
+for i in {1..10}
+do
+	RES=$(curl -s -o /dev/null \
+	-w "%{http_code}" \
+	-X POST http://localhost:3000/api/auth/login \
+	-H "Content-Type: application/json" \
+	-d '{"email":"me@example.com","password":"incorrectpass"}')
+	sleep 2
+
+	echo "Request ($i) response: $RES"
+	if ((HTTP_CODE == 429)); then
+		REQUEST_ARE_LIMITED=1
+		break
+	fi
+done
+
+echo ""
+if ((REQUEST_ARE_LIMITED == 1)); then
+	echo "Broken authentication test result: Successful!"
+	echo "The API rate limiter prevents excessive amounts of login tries to the same user account."
+	echo "Suggestion: Could be made better by locking user account that has received more than reasonable login tries in a short period. Rate limiter can limit requests from the same IP, but if the attacker is using multiple IPs the user account isn't really save with just rate limiter."
+else
+	echo "Broken authentication test result: Failed."
+	echo "During login the account should be either be locked after multiple false login tries, or  rate limiter should limit requests."
+fi
+
+
+echo ""
+echo "Sleeping for 10 seconds"
+sleep 10
+
+echo ""
 echo "  SQL injection:"
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"'"'"' OR 1=1--","password":"incorrectpass1"}'
-sleep 10
 
-echo "  Ddos test:"
+echo ""
+echo "  DoS test:"
 for i in {1..10}
 do
 	curl -s -o /dev/null \

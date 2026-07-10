@@ -54,10 +54,14 @@ router.post("/register", authLimiter, validateBody(registerSchema),
 	}
 )
 
-router.post(
-	"/login",
-	authLimiter,
-	validateBody(loginSchema),
+// interface Attempt {
+// 	lastAttempt: number
+// 	attempts: number
+// 	locked: boolean
+// }
+
+// const attemptMap: Map<string, Attempt> = new Map() // Should be more robust impl, but  this will do for now
+router.post("/login", authLimiter, validateBody(loginSchema),
 	async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const { email, password } = req.body
@@ -70,8 +74,42 @@ router.post(
 				user?.password_hash ?? dummyHash
 			)
 
-			if (!user || !passwordMatches)
+			if (!user || !passwordMatches) {
+				// User locking logic implementation for fun.
+				// Commented out because this implementation would give
+				// attackers another way to execute DoS attacks successfully.
+				// Auth limiter solves brute force attacks just fine for a small application as long as
+				// users use strong passwords and service has multi-factor auth option.
+				// Logic could be replaced with something that propmpts the user, like a CAPTCHA, to slow down the attack.
+
+				// const currentTime = Date.now()
+				// if (attemptMap.has(email)) {
+				// 	let { lastAttempt, attempts, locked } = attemptMap.get(email) as Attempt
+				// 	const attempt: Attempt = {
+				// 		lastAttempt: currentTime,
+				// 		attempts: attempts + 1,
+				// 		locked
+				// 	}
+
+				// 	if (attempts >= 10 && currentTime - lastAttempt < (1 * 60 * 1000) && !locked) {
+				// 		attempt.lastAttempt = currentTime
+				// 		attempt.attempts = attempts + 1
+				// 		attempt.locked = true
+				// 	} else if (locked && currentTime - lastAttempt >= 15 * 60 * 1000) {
+				// 		attempt.lastAttempt = currentTime
+				// 		attempt.attempts = 0
+				// 		attempt.locked = false
+				// 	}
+
+				// 	attemptMap.set(email, attempt)
+
+				// 	if (attempt.locked) {
+				// 		throw new AppError("Too many auth attempts, please try again later", 429)
+				// 	}
+				// }
+
 				throw new AppError("Invalid email or password", 401)
+			}
 
 			const accessToken = signAccessToken({
 				sub: user.id,

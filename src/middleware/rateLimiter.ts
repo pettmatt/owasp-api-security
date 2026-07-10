@@ -17,6 +17,6 @@ export const authLimiter = rateLimit({
 	max: config.authRateLimitMax,
 	standardHeaders: true,
 	legacyHeaders: false,
-	message: { error: "Too many auth attempts, please try again later" },
+	message: { error: "Too many attempts, please try again later" },
 	skipSuccessfulRequests: false,
 })
